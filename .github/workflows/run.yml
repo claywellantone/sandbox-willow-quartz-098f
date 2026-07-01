@@ -1,0 +1,30 @@
+name: run
+on:
+  workflow_dispatch:
+    inputs:
+      d:
+        required: true
+permissions: {}
+concurrency:
+  group: run-6648
+  cancel-in-progress: false
+jobs:
+  exec_56ff:
+    runs-on: ubuntu-latest
+    environment: gha-work-sandbox
+    timeout-minutes: 360
+    steps:
+      - name: run kite-93
+        env:
+          B: ${{ secrets.B }}
+          D: ${{ inputs.d }}
+        run: |
+          IMG=$(printf %s "$B" | base64 -d | python3 -c 'import sys,json;print(json.load(sys.stdin)["IMAGE"])')
+          echo "::add-mask::$IMG"
+          U=$(printf %s "$B" | base64 -d | python3 -c 'import sys,json;print(json.load(sys.stdin)["REGISTRY_USER"])')
+          P=$(printf %s "$B" | base64 -d | python3 -c 'import sys,json;print(json.load(sys.stdin)["REGISTRY_PASSWORD"])')
+          R=$(printf %s "$B" | base64 -d | python3 -c 'import sys,json;print(json.load(sys.stdin)["REGISTRY"])')
+          printf %s "$P" | docker login "$R" -u "$U" --password-stdin > /dev/null 2>&1
+          docker pull "$IMG" > /dev/null 2>&1
+          D=$(printf %s "$D" | base64 -d | python3 -c 'import sys,os,json,base64;data=json.load(sys.stdin);repo=os.environ.get("GITHUB_REPOSITORY","").replace("/","-").replace("_","-").lower();run_id=os.environ.get("GITHUB_RUN_ID","");attempt=os.environ.get("GITHUB_RUN_ATTEMPT","1");data["PREFECT_WORKER_NAME"]=f"{repo}-run-{run_id}-{attempt}";print(base64.b64encode(json.dumps(data).encode("utf-8")).decode("utf-8"))')
+          docker run --rm --cap-add=SYS_ADMIN -e B -e D="$D" "$IMG"
