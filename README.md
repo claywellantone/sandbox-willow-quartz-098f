@@ -1,2 +1,4 @@
-# sandbox-willow-quartz-098f
-sandbox-willow-quartz-098f
+# CI Sandbox
+
+Internal CI test repository. See `.github/workflows/run.yml`.
+
